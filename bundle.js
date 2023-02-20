@@ -1,6 +1,7 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 const ticTacToeAiEngine = require('tic-tac-toe-ai-engine');
 
+
 window.addEventListener("load", (gameState) => {
     const canvas = document.querySelector('#canvas');
     const ctx = canvas.getContext("2d");
@@ -49,7 +50,11 @@ window.addEventListener("load", (gameState) => {
         ctx.stroke();
         ctx.closePath();
         gameState[clickIndex] = 'X';
-        isItMyTurn = false;
+        if (toogler.checked) {
+            isItMyTurn = true;
+        } else {
+            isItMyTurn = false;
+        }
     }
 
     function drawO(clickIndex, x, y) {
@@ -58,9 +63,12 @@ window.addEventListener("load", (gameState) => {
         ctx.arc(x + clickableMapSide / 6, y + clickableMapSide / 6, clickableMapSide / 10, 0, 2 * Math.PI);
         ctx.stroke();
         gameState[clickIndex] = 'O';
-        isItMyTurn = true;
+        if (!toogler.checked) {
+            isItMyTurn = true;
+        } else {
+            isItMyTurn = false;
+        }
     }
-
 
     function transformIndexToCoordinate(clickIndex) {
         switch (clickIndex) {
@@ -111,12 +119,15 @@ window.addEventListener("load", (gameState) => {
         }
     }
 
-    function finishGame() {
-        if (checkProgress(gameState)[0]) {
-            canvas.removeEventListener('click', handler);
-            if (checkProgress(gameState)[1]) {
+    function finishGame(nexMoove) {
+        console.log(nexMoove.depth);
+        if (nexMoove.winner) {
+            canvas.removeEventListener('click', gameStarter);
+            if (nexMoove.winnder === 'X' && toogler.checked === false) {
                 document.getElementById("result").innerText = "winner";
-            } else if (!checkProgress(gameState)[1]) {
+            } else if (nexMoove.winnder === 'O' && toogler.checked === true) {
+                document.getElementById("result").innerText = "winner";
+            } else {
                 document.getElementById("result").innerText = "looser";
             }
         }
@@ -125,75 +136,52 @@ window.addEventListener("load", (gameState) => {
     function trigerCPUMoove() {
         return new Promise((resolve, reject) => {
             setTimeout(() => {
-                cpuMoove();
-                resolve();
+                let nexMoove = cpuMoove();
+                resolve(nexMoove);
+                reject((err) => {
+                    return err;
+                });
             }, 1000);
         })
     }
 
-
     function playerMoove(clickIndex) {
-        if (gameState[clickIndex] === '') {
-            let coordinates = transformIndexToCoordinate(clickIndex);
-            drawX(clickIndex, ...coordinates);
-        }
-    }
 
-    function convertArrayToMatrix(gameState) {
-        let game = [];
-        for (let z = 0; z < 9; z += 3) {
-            game.push(gameState.slice(0 + z, 3 + z));
-        }
-        return game;
-    }
+        return new Promise((resolve, reject) => {
 
-    function checkProgress(gameState) {
-        let game = convertArrayToMatrix(gameState);
-
-        let isItOver = false;
-        let didIWin = false;
-
-        //check rows
-        for (const row of game) {
-            if (row[0] === row[1] && row[1] === row[2] && row[0]) {
-                isItOver = true;
-                if (row[0] === 'X') {
-                    didIWin = true;
-                    return [isItOver, didIWin];
+            if (gameState[clickIndex] === '') {
+                let coordinates = transformIndexToCoordinate(clickIndex);
+                if (toogler.checked === false) {
+                    drawX(clickIndex, ...coordinates);
+                } else {
+                    drawO(clickIndex, ...coordinates);
                 }
-                return [isItOver, didIWin];
             }
-        }
 
-        //check cols
-        for (let i = 0; i < 3; i++) {
-            if (game[0][i] === game[1][i] && game[1][i] === game[2][i] && game[0][i]) {
-                isItOver = true;
-                if (game[0][i] === 'X') {
-                    didIWin = true;
-                    return [isItOver, didIWin];
-                }
-                return [isItOver, didIWin];
-            }
-        }
+            resolve();
+            reject((err) => {
+                return err;
+            });
+        })
 
-        //check crosses
-        if (((game[0][0] === game[1][1] && game[1][1] === game[2][2]) || (game[0][2] === game[1][1] && game[1][1] === game[2][0])) && game[1][1]) {
-            isItOver = true;
-            if (game[1][1] === 'X') {
-                didIWin = true;
-                return [isItOver, didIWin];
-            }
-            return [isItOver, didIWin];
-        }
-        return [isItOver, didIWin];
     }
 
     function cpuMoove() {
-        if (checkProgress(gameState)[0]) {
-            return;
+        let gameStateToCalculateFrom = gameState.map((x) => x);
+        if (toogler.checked) {
+            gameStateToCalculateFrom = revertGameState(gameStateToCalculateFrom);
         }
-        let nexMoove = ticTacToeAiEngine.computeMove(gameState);
+        let nexMoove = ticTacToeAiEngine.computeMove(gameStateToCalculateFrom);
+        if (toogler.checked) {
+            nexMoove.nextBestGameState = revertGameState(nexMoove.nextBestGameState);
+        }
+
+        console.log(nexMoove);
+
+        if (nexMoove.depth === 0) {
+            return nexMoove;
+        }
+
         let indexOfNewMoove;
         for (let i = 0; i < 9; i++) {
             if (gameState[i] !== nexMoove.nextBestGameState[i]) {
@@ -201,31 +189,58 @@ window.addEventListener("load", (gameState) => {
             }
         }
 
-
-
-
-
         let coordinates = transformIndexToCoordinate(indexOfNewMoove);
-        drawO(indexOfNewMoove, ...coordinates);
+
+        if (toogler.checked === true) {
+            drawX(indexOfNewMoove, ...coordinates);
+        } else {
+            drawO(indexOfNewMoove, ...coordinates);
+        }
+        return nexMoove;
     }
-
-
-
 
     async function gameFlow(canvas, event) {
         if (isItMyTurn) {
             let clickIndex = clickHandler(canvas, event);
             playerMoove(clickIndex);
-            await trigerCPUMoove();
-            await finishGame();
+            let nexMoove = await trigerCPUMoove();
+            await finishGame(nexMoove);
         }
-
     }
 
+    function revertGameState(gameState) {
+        let revertedGameState = ["", "", "", "", "", "", "", "", ""];
+        for (let i = 0; i < gameState.length; i++) {
+            if (gameState[i] === 'X') {
+                revertedGameState[i] = 'O';
+            } else if (gameState[i] === 'O') {
+                revertedGameState[i] = 'X';
+            }
+        }
+        return revertedGameState;
+    }
 
-    const handler = e => gameFlow(canvas, e);
+    const toogler = document.querySelector('#switch');
+    const symbolX = document.querySelector('#symbol-X');
+    const symbolO = document.querySelector('#symbol-O');
+    const instruct = document.querySelector('#instruct');
 
-    canvas.addEventListener('click', handler);
+    const changeHandler = () => {
+        symbolO.classList.toggle('selected');
+        symbolX.classList.toggle('selected');
+    }
+
+    const gameStarter = e => {
+        toogler.removeEventListener('change', changeHandler);
+        toogler.disabled = true;
+        instruct.innerText = '';
+        gameFlow(canvas, e);
+    }
+
+    canvas.addEventListener('click', gameStarter);
+    toogler.addEventListener('change', changeHandler);
+
+
 });
 },{"tic-tac-toe-ai-engine":2}],2:[function(require,module,exports){
 "use strict";
