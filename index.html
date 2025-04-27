@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>My Portfolio</title>
+
+    <!-- TailwindCSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+
+    <!-- AOS (Animate on Scroll) -->
+    <link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet" />
+
+    <!-- Google Fonts: Poppins -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      body {
+        background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+        font-family: 'Poppins', sans-serif;
+      }
+      .glass-card {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+    </style>
+  </head>
+  <body class="text-white min-h-screen flex flex-col items-center px-6 py-10">
+    <header class="text-center mb-12">
+      <h1 class="text-5xl md:text-6xl font-extrabold mb-4 tracking-tight">
+        👋 Hi, I'm Darius Hadjati
+      </h1>
+      <p class="text-xl md:text-2xl text-gray-300">
+        Frontend Developer | UI/UX Enthusiast | Tech Explorer
+      </p>
+    </header>
+
+    <main class="w-full max-w-6xl">
+      <h2 class="text-3xl font-bold mb-10 text-center">🚀 Portfolio</h2>
+      <div id="projects" class="grid gap-10 md:grid-cols-2 lg:grid-cols-3">
+        <!-- Projects will go here -->
+      </div>
+    </main>
+
+    <footer class="mt-20 text-gray-500 text-sm text-center">
+      © 2025 Darius Hadjati — Built with ❤️
+    </footer>
+
+    <!-- AOS Script -->
+    <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+
+    <script>
+      const projects = [
+        {
+          title: 'Todo App',
+          description:
+            'A showcase project demonstrating my React skills, featuring Redux for complex state management, Firebase integration for CRUD operations and user authentication, along with advanced application architecture.',
+          link: 'https://darius-todo-app.netlify.app/',
+        },
+        {
+          title: 'Creative Landing Page',
+          description:
+            'A pixel-perfect landing page built with modern animations and interactive components.',
+          link: '#',
+        },
+        {
+          title: 'E-commerce Dashboard',
+          description:
+            'An admin dashboard for managing products, orders, and analytics with dynamic charts.',
+          link: '#',
+        },
+      ];
+
+      const container = document.getElementById('projects');
+
+      projects.forEach((project) => {
+        const card = document.createElement('div');
+        card.className =
+          'glass-card p-6 rounded-3xl shadow-2xl transition transform hover:-translate-y-2 hover:shadow-3xl duration-300';
+        card.setAttribute('data-aos', 'fade-up');
+        card.setAttribute('data-aos-duration', '1000');
+
+        card.innerHTML = `
+        <h3 class="text-2xl font-semibold mb-3">${project.title}</h3>
+        <p class="mb-6 text-gray-300 text-sm">${project.description}</p>
+        <a href="${project.link}" target="_blank" class="inline-block px-5 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-full text-sm font-semibold transition">
+          View Project
+        </a>
+      `;
+
+        container.appendChild(card);
+      });
+
+      AOS.init();
+    </script>
+  </body>
+</html>
